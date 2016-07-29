@@ -5,4 +5,4 @@ RUN apt-get -y install python3 python3-numpy python3-pandas
 RUN mkdir /scripts
 COPY scripts/ /scripts
 
-ENTRYPOINT ["bash", "/scripts/expression_filter.py"]
+ENTRYPOINT ["python3", "/scripts/expression_filter.py"]
