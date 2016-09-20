@@ -32,7 +32,7 @@ The GP2S score threshold to be used for differential expression identification. 
 
 ### Filter Gene List
 
-One line per gene ID matching the ones provided in the expression CSV file. If supplied, the expression CSV file will be filtered down to the gene IDs present in this file. An example use would be filtering the expression data to just transcription factors.
+One line per gene ID matching the ones provided in the expression CSV file. The file may be tab delimited and contain other information, but in that case the first column needs to be the relevant gene IDs with all irrelevant IDs removed. If supplied, the expression CSV file will be filtered down to the gene IDs present in this file. An example use would be filtering the expression data to just transcription factors.
 
 ### Remove Condition
 

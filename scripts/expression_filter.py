@@ -11,7 +11,8 @@ def parse_args():
 	parser.add_argument('--GeneList', dest='list', type=argparse.FileType('r'), help='An optional gene list (such as TFs) to filter the expression data. One line per gene identifier.')
 	parser.add_argument('--ScoreThreshold', dest='thresh', type=float, default=5, help='GP2S score significance threshold to deem a gene differentially expressed. Default: 5')
 	parser.add_argument('--RemoveCondition', dest='cond', type=str, default=None, help='If provided, remove the data from a given condition (such as control in preparation for treated expression clustering). Default: None (no condition removal)')
-	parser.add_argument('--AverageReps', dest='reps', action='store_true', help='Flag. If provided, the individual replicates will be averaged to return one value per time point')
+	parser.add_argument('--AverageReps', dest='reps', action='store_true', help='Flag. If provided, the individual replicates will be averaged to return one value per time point.')
+	parser.add_argument('--TagReps', dest='tag', action='store_true', help='Flag. If provided, multiple replicates will be denoted as individual time series by appending _1, _2 etc to the treatment name. Useful for CSI input.')
 	args = parser.parse_args()
 	return args
 
@@ -63,7 +64,7 @@ def filter_gp2s(data, args):
 def filter_list(data,args):
 	genes = args.list.readlines()
 	for i in range(len(genes)):
-		genes[i] = genes[i].strip().upper()
+		genes[i] = genes[i].split()[0].upper()
 	del_inds = []
 	for i in range(data.shape[0]):
 		if data[i,0] not in genes:
@@ -75,6 +76,10 @@ def filter_list(data,args):
 	return data
 
 def filter_condition(data, header, args):
+	#you can't remove a condition if you have no condition line
+	if header.shape[0]==1:
+		sys.stdout.write('No condition line found in file. Cannot remove provided condition. Skipping.\n')
+		return (data, header)
 	header2 = list(header[0,:])
 	args.cond = args.cond.upper()
 	cond_del_ind = []
@@ -113,6 +118,24 @@ def average_reps(data, header):
 			data2 = np.hstack((data2, newcol))
 	return (data2, header2)
 
+def tag_reps(header):
+	#if it's just time points, we need a fake condition header row
+	if header.shape[0]==1:
+		sys.stdout.write('No condition line found in file. Adding dummy condition line at start of file to mark replicates.\n')
+		header = np.vstack((header,header))
+		header[0,0] = 'Treatment'
+		for i in range(1,header.shape[1]):
+			header[0,i] = 'Data'
+	hitcount = {}
+	for i in range(1,header.shape[1]):
+		holder = (header[0,i],header[1,i])
+		if holder not in hitcount:
+			hitcount[holder] = 1
+		else:
+			hitcount[holder] += 1
+		header[0,i] = header[0,i] + '_' + str(hitcount[holder])
+	return header
+
 def write_data(data, header):
 	#turn header into strings again (in case it's relevant)
 	for i in range(header.shape[0]):
@@ -136,7 +159,7 @@ def main():
 	#grab the arguments
 	args = parse_args()
 	#quick sanity check - do we actually have anything to do?
-	if (not args.gp2s) and (not args.list) and (not args.cond) and (not args.reps):
+	if (not args.gp2s) and (not args.list) and (not args.cond) and (not args.reps) and (not args.tag):
 		sys.stderr.write('No task given. No task performed. Aborting.\n')
 		sys.exit(1)
 	#if we're here, then there's at least something to do.
@@ -154,6 +177,9 @@ def main():
 	#average out replicates
 	if args.reps:
 		(data, header) = average_reps(data, header)
+	#tag replicates
+	if args.tag:
+		header = tag_reps(header)
 	#export the final thing
 	write_data(data, header)
 	
