@@ -13,6 +13,7 @@ def parse_args():
 	parser.add_argument('--RemoveCondition', dest='cond', type=str, default=None, help='If provided, remove the data from a given condition (such as control in preparation for treated expression clustering). Default: None (no condition removal)')
 	parser.add_argument('--AverageReps', dest='reps', action='store_true', help='Flag. If provided, the individual replicates will be averaged to return one value per time point.')
 	parser.add_argument('--TagReps', dest='tag', action='store_true', help='Flag. If provided, multiple replicates will be denoted as individual time series by appending _1, _2 etc to the treatment name. Useful for CSI input.')
+	parser.add_argument('--LogTransform', dest='log', action='store_true', help='Flag. If provided, the data will be log transformed to make its distribution closer to normal. Useful when preparing count data for array-minded analysis algorithms.')
 	args = parser.parse_args()
 	return args
 
@@ -118,7 +119,7 @@ def average_reps(data, header):
 			data2 = np.hstack((data2, newcol))
 	return (data2, header2)
 
-def tag_reps(header):
+def tag_reps(data, header):
 	#if it's just time points, we need a fake condition header row
 	if header.shape[0]==1:
 		sys.stdout.write('No condition line found in file. Adding dummy condition line at start of file to mark replicates.\n')
@@ -134,7 +135,18 @@ def tag_reps(header):
 		else:
 			hitcount[holder] += 1
 		header[0,i] = header[0,i] + '_' + str(hitcount[holder])
-	return header
+	#sort the reps to be together, just in case
+	holder = []
+	for i in range(1,header.shape[1]):
+		holder.append((header[0,i],float(header[1,i])))
+	#enumerate creates an (index, element_of_list) structure
+	#while in turn element_of_list is a tuple of the holder column
+	#so we point the key to look at the rep name first and then the time point
+	inds = [i[0] for i in sorted(enumerate(holder), key=lambda x: (x[1][0], x[1][1]))]
+	#now sort them accordingly
+	header[:,1:] = header[:,1+np.array(inds)]
+	data[:,1:] = data[:,1+np.array(inds)]
+	return (data, header)
 
 def write_data(data, header):
 	#turn header into strings again (in case it's relevant)
@@ -159,7 +171,7 @@ def main():
 	#grab the arguments
 	args = parse_args()
 	#quick sanity check - do we actually have anything to do?
-	if (not args.gp2s) and (not args.list) and (not args.cond) and (not args.reps) and (not args.tag):
+	if (not args.gp2s) and (not args.list) and (not args.cond) and (not args.reps) and (not args.tag) and (not args.log):
 		sys.stderr.write('No task given. No task performed. Aborting.\n')
 		sys.exit(1)
 	#if we're here, then there's at least something to do.
@@ -179,7 +191,10 @@ def main():
 		(data, header) = average_reps(data, header)
 	#tag replicates
 	if args.tag:
-		header = tag_reps(header)
+		(data, header) = tag_reps(data, header)
+	#log transform
+	if args.log:
+		data = np.log2(data)
 	#export the final thing
 	write_data(data, header)
 	
