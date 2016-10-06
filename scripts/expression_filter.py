@@ -195,7 +195,7 @@ def main():
 		(data, header) = tag_reps(data, header)
 	#log transform
 	if args.log:
-		data = np.log2(data)
+		data[:,1:] = np.log2(data[:,1:])
 	#export the final thing
 	write_data(data, header)
 	
