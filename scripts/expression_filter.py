@@ -136,6 +136,7 @@ def tag_reps(data, header):
 			hitcount[holder] += 1
 		header[0,i] = header[0,i] + '_' + str(hitcount[holder])
 	#sort the reps to be together, just in case
+	#as you never know
 	holder = []
 	for i in range(1,header.shape[1]):
 		holder.append((header[0,i],float(header[1,i])))
