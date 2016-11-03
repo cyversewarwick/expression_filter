@@ -3,6 +3,7 @@ import numpy as np
 import pandas as pd
 import sys
 import math
+import os
 
 def parse_args():
 	parser = argparse.ArgumentParser()
@@ -195,7 +196,7 @@ def main():
 		(data, header) = tag_reps(data, header)
 	#log transform
 	if args.log:
-		data[:,1:] = np.log2(data[:,1:])
+		data[:,1:] = np.log2(data[:,1:].astype(float))
 	#export the final thing
 	write_data(data, header)
 	
