@@ -12,7 +12,7 @@ Expression Filter accepts an expression CSV on input and returns an expression C
 
 ## Test Run
 
-In case you want to try out the different features, a demonstration expression CSV has been provided at `ktpolanski/expression_filter_testdata/input.csv` under Community Data. The folder also features an arbitrary gene list (`genes.txt`) and manipulated GP2S scores so that some genes come up as insignificant (`scores.txt`) if you want to try the relevant features.
+In case you want to try out the different features, a demonstration expression CSV has been provided at `cyverseuk/expression_filter_testdata/input.csv` under Community Data. The folder also features an arbitrary gene list (`genes.txt`) and manipulated GP2S scores so that some genes come up as insignificant (`scores.txt`) if you want to try the relevant features.
 
 ## Input in Detail
 
