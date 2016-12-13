@@ -196,7 +196,9 @@ def main():
 		(data, header) = tag_reps(data, header)
 	#log transform
 	if args.log:
+		mask = data[:,1:].astype(float)==0
 		data[:,1:] = np.log2(data[:,1:].astype(float))
+		data[:,1:][mask] = 0
 	#export the final thing
 	write_data(data, header)
 	
